@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 
 app = Flask('revolut-hello')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+app.config.from_envvar('FLASK_CONFIG')
 db = SQLAlchemy(app)
 
 
@@ -56,4 +57,9 @@ class UserView(MethodView):
         return '', 201
 
 
-app.add_url_rule('/hello/<name>', view_func=UserView.as_view('hello'), methods=['GET', 'PUT'])
+@app.route('/healthcheck')
+def healthcheck():
+    return 'ALIVE'
+
+
+app.add_url_rule('/hello/<name>', view_func=UserView.as_view('hello'))
