@@ -1,0 +1,6 @@
+digraph {
+"Route53 record" -> ELB
+ELB -> {"Instance: web1" "Instance: web2"}
+"Instance: web1" -> RDS
+"Instance: web2" -> RDS
+}

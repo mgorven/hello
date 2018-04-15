@@ -2,7 +2,7 @@ provider "aws" {
     region = "us-east-1"
 }
 
-# TODO: Security groups, VPCs
+# TODO: Security groups, VPCs, R53 zone and record
 
 resource "aws_elb" "web" {
     name = "hello-elb"
@@ -21,7 +21,7 @@ resource "aws_elb" "web" {
         unhealthy_threshold = 2
         timeout = 2
         target = "HTTP:5000/healthcheck"
-        interval = 30
+        interval = 5
     }
 }
 
@@ -29,6 +29,8 @@ resource "aws_instance" "web" {
     ami = "ami-74e6b80d"
     instance_type = "t2.nano"
     key_name = "mgorven-mamma"
+    # TODO: Spread over AZs for redundancy
+    # TODO: Autoscaling
     count = 2
 
     provisioner "remote-exec" {
@@ -61,5 +63,5 @@ resource "aws_db_instance" "hello" {
     name = "hello"
     username = "web"
     password = "ZvlPwBP8HKLbC0cj"
-    # TODO: Multi-AZ
+    # TODO: Multi-AZ, backups
 }
