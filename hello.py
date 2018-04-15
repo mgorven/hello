@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound
 
 
-app = Flask('revolut-hello')
+app = Flask('hello')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config.from_envvar('FLASK_CONFIG')
 db = SQLAlchemy(app)

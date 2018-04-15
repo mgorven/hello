@@ -2,6 +2,8 @@ provider "aws" {
     region = "us-east-1"
 }
 
+# TODO: Security groups, VPCs
+
 resource "aws_elb" "web" {
     name = "hello-elb"
     availability_zones = ["${aws_instance.web.*.availability_zone}"]
@@ -26,19 +28,28 @@ resource "aws_elb" "web" {
 resource "aws_instance" "web" {
     ami = "ami-74e6b80d"
     instance_type = "t2.nano"
+    key_name = "mgorven-mamma"
     count = 2
 
     provisioner "remote-exec" {
         inline = [
-            "apt-get update && apt-get -y install python3-virtualenv",
-            "adduser --disabled-password --gecos 'web,,,,,' web",
-            "cd /home/web && virtualenv -p python3 venv",
-            "cd /home/web && git checkout --depth=1 https://github.com/mgorven/hello.git",
-            "/home/web/venv/bin/python pip install -r /home/web/hello/requirements.txt",
-            "echo 'SQLALCHEMY_DATABASE_URI=\"mysql://${aws_db_instance.hello.username}:${aws_db_instance.hello.password}/${aws_db_instance.hello.name}\"' > /home/web/hello/prod.cfg",
+            "sudo apt-get update && sudo apt-get -y install python3-virtualenv",
+            "sudo adduser --disabled-password --gecos 'web,,,,,' web",
+            "cd /home/web && sudo virtualenv -p python3 venv",
+            "cd /home/web && sudo git checkout --depth=1 https://github.com/mgorven/hello.git",
+            "sudo /home/web/venv/bin/pip pip install -r /home/web/hello/requirements.txt",
+            "echo 'SQLALCHEMY_DATABASE_URI=\"mysql://${aws_db_instance.hello.username}:${aws_db_instance.hello.password}@${aws_db_instance.hello.address}/${aws_db_instance.hello.name}\"' | sudo tee /home/web/hello/prod.cfg",
+            # TODO: Only run DB creation once
+            "cd /home/web/hello && sudo -u web FLASK_CONFIG=prod.cfg /home/web/venv/bin/python -c 'import hello; hello.db.create_all()'",
+            # TODO: Use a proper application runner like uWSGI/Gunicorn
             "echo 'cd /home/web/hello && sudo -u web FLASK_APP=hello.py FLASK_CONFIG=prod.cfg /home/web/venv/bin/flask run -h :: --with-threads &' >> /etc/rc.local",
-            "/etc/rc.local",
+            # TODO: Use a systemd unit
+            "sudo /etc/rc.local",
         ]
+        connection {
+            type = "ssh"
+            user = "ubuntu"
+        }
     }
 }
 
@@ -50,4 +61,5 @@ resource "aws_db_instance" "hello" {
     name = "hello"
     username = "web"
     password = "ZvlPwBP8HKLbC0cj"
+    # TODO: Multi-AZ
 }
